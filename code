@@ -1,0 +1,39 @@
+import urllib.request
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+# Define the image URLs
+image_urls = [
+    "https://encrypted-tbn1.gstatic.com/licensed-image?q=tbn:ANd9GcREj22c-wMNL5IDmU99v8G7voUl17Yxm0JJqMLqttdPT4DnaB99zqVK7HWiNzjP3aZnzCEf-ikAqb2yiDk",
+    "https://m.media-amazon.com/images/I/51WRaOtap-L._AC_UF1000,1000_QL80_.jpg",
+    "https://www.airport-technology.com/wp-content/uploads/sites/14/2022/01/Ameca_White_BG_03-1038x778.jpg"
+]
+
+# Load the pre-trained MobileNet model
+model = tf.keras.applications.MobileNet(include_top=True, weights="imagenet")
+
+# Iterate through the image URLs
+for i, image_url in enumerate(image_urls):
+    # Load and preprocess the image
+    with urllib.request.urlopen(image_url) as url:
+        image_data = url.read()
+    image = tf.image.decode_jpeg(image_data, channels=3)
+    image = tf.image.resize(image, [224, 224])
+    image = tf.keras.applications.mobilenet.preprocess_input(image)
+
+    # Make predictions
+    predictions = model.predict(tf.expand_dims(image, axis=0))
+    decoded_predictions = tf.keras.applications.mobilenet.decode_predictions(predictions, top=3)[0]
+
+    # Display the image
+    plt.figure(figsize=(6, 6))
+    plt.imshow(image)
+    plt.axis("off")
+
+    # Print the predictions
+    plt.title(f"Image {i+1} predictions:")
+    for j, (_, label, probability) in enumerate(decoded_predictions):
+        plt.text(0, (j+1)*20, f"{j+1}. {label}: {probability:.4f}", fontsize=12, color="white", backgroundcolor="black")
+
+    # Show the image with predictions
+    plt.show()
